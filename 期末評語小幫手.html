@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國小期末評語小幫手 | 國小八大領域評語產生器</title>
+    <!-- Google Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --border-color: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-tertiary: #94a3b8;
+            --accent-blue: #1a73e8;
+            --accent-blue-light: #e8f0fe;
+            --accent-blue-hover: #1557b0;
+            --radius-s: 8px;
+            --radius-m: 14px;
+            --radius-l: 24px;
+            --font-main: 'Noto Sans TC', 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --shadow-s: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-m: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+
+        /* Top Header Navigation */
+        .navbar {
+            height: 64px;
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .gemini-sparkle {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #4285f4, #9b51e0, #e91e63);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: white;
+        }
+
+        .gemini-sparkle .material-symbols-outlined {
+            font-size: 20px;
+        }
+
+        .tag-badge {
+            background-color: var(--accent-blue-light);
+            color: var(--accent-blue);
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* Main App Container */
+        .main-container {
+            max-width: 1080px;
+            width: 100%;
+            margin: 24px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            flex: 1;
+        }
+
+        /* Card Section Styles */
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-m);
+            padding: 24px;
+            box-shadow: var(--shadow-s);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .section-header .material-symbols-outlined {
+            color: var(--accent-blue);
+            font-size: 20px;
+        }
+
+        /* Form Group & Selection Chips */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .chips-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip-btn {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13.5px;
+            font-family: var(--font-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chip-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background-color: var(--accent-blue-light);
+        }
+
+        .chip-btn.active {
+            background-color: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .chip-btn.multi-active {
+            background-color: var(--accent-blue-light);
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        /* Text Input Control */
+        .text-input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .text-input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-s);
+            font-family: var(--font-main);
+            font-size: 14px;
+            color: var(--text-primary);
+            background-color: var(--bg-surface);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--accent-blue);
+        }
+
+        textarea {
+            height: 72px;
+            resize: vertical;
+        }
+
+        /* Primary Generate Button */
+        .btn-generate {
+            width: 100%;
+            background: linear-gradient(135deg, #1a73e8, #4285f4);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: var(--radius-l);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: var(--font-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-generate:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+        }
+
+        /* Result Box */
+        .result-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-m);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: var(--radius-s);
+            font-size: 13px;
+            font-family: var(--font-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            background-color: var(--accent-blue-light);
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .result-content {
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-s);
+            padding: 18px;
+            font-size: 15px;
+            line-height: 1.8;
+            color: var(--text-primary);
+            min-height: 110px;
+            white-space: pre-line;
+            position: relative;
+        }
+
+        /* Typing Cursor Effect */
+        .typing-cursor::after {
+            content: '▌';
+            animation: blink 0.8s infinite;
+            color: var(--accent-blue);
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Toast Popup */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background-color: var(--text-primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--radius-s);
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 200;
+            box-shadow: var(--shadow-m);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation -->
+    <header class="navbar">
+        <a href="#" class="brand">
+            <div class="gemini-sparkle">
+                <span class="material-symbols-outlined">auto_awesome</span>
+            </div>
+            <span>國小期末評語小幫手</span>
+            <span class="tag-badge">國小八大領域版</span>
+        </a>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-container">
+        
+        <!-- Controls Card -->
+        <div class="card">
+            
+            <!-- 1. 年級選單 -->
+            <div class="form-group">
+                <span class="form-label">1. 選擇學生年級段</span>
+                <div class="chips-grid" id="gradeChips">
+                    <button class="chip-btn" onclick="selectGrade('low', this)">🌱 國小低年級 (1-2年級)</button>
+                    <button class="chip-btn active" onclick="selectGrade('mid', this)">🌿 國小中年級 (3-4年級)</button>
+                    <button class="chip-btn" onclick="selectGrade('high', this)">🌳 國小高年級 (5-6年級)</button>
+                </div>
+            </div>
+
+            <!-- 2. 國小八大領域選擇 -->
+            <div class="form-group">
+                <span class="form-label">2. 選擇領域分類（國小八大領域）</span>
+                <div class="chips-grid" id="domainChips">
+                    <button class="chip-btn active" onclick="selectDomain('all', this)">⭐ 綜合/日常表現評語</button>
+                    <button class="chip-btn" onclick="selectDomain('chinese', this)">📖 語文領域 (國語/本土/英語)</button>
+                    <button class="chip-btn" onclick="selectDomain('math', this)">➕ 數學領域</button>
+                    <button class="chip-btn" onclick="selectDomain('science', this)">🔬 自然科學領域</button>
+                    <button class="chip-btn" onclick="selectDomain('social', this)">🌏 社會領域</button>
+                    <button class="chip-btn" onclick="selectDomain('art', this)">🎨 藝術領域 (音樂/視覺/表演)</button>
+                    <button class="chip-btn" onclick="selectDomain('pe', this)">🏃 健康與體育領域</button>
+                    <button class="chip-btn" onclick="selectDomain('activity', this)">🧩 綜合活動領域</button>
+                    <button class="chip-btn" onclick="selectDomain('tech', this)">💻 科技與跨領域/社團</button>
+                </div>
+            </div>
+
+            <!-- 3. 語氣風格 -->
+            <div class="form-group">
+                <span class="form-label">3. 選擇評語風格與語氣</span>
+                <div class="chips-grid" id="toneChips">
+                    <button class="chip-btn active" onclick="selectTone('warm', this)">🌸 溫暖鼓勵 (多正面肯定)</button>
+                    <button class="chip-btn" onclick="selectTone('pro', this)">💼 客觀中肯 (親師通訊紀錄)</button>
+                    <button class="chip-btn" onclick="selectTone('bullet', this)">📌 條列精準 (方便貼學務系統)</button>
+                </div>
+            </div>
+
+            <!-- 4. 學生特質標籤 (可複選) -->
+            <div class="form-group">
+                <span class="form-label">4. 學生特質與表現標籤 (可多選)</span>
+                <div class="chips-grid" id="traitChips">
+                    <button class="chip-btn multi-active" onclick="toggleTrait('認真負責', this)">認真負責</button>
+                    <button class="chip-btn multi-active" onclick="toggleTrait('熱心助人', this)">熱心助人</button>
+                    <button class="chip-btn" onclick="toggleTrait('思考敏捷', this)">思考敏捷</button>
+                    <button class="chip-btn" onclick="toggleTrait('樂於表達', this)">樂於表達</button>
+                    <button class="chip-btn" onclick="toggleTrait('團隊合作佳', this)">團隊合作佳</button>
+                    <button class="chip-btn" onclick="toggleTrait('具領導能力', this)">具領導能力</button>
+                    <button class="chip-btn" onclick="toggleTrait('專注力待加強', this)">專注力待加強</button>
+                    <button class="chip-btn" onclick="toggleTrait('作業寫作用心', this)">作業寫作用心</button>
+                    <button class="chip-btn" onclick="toggleTrait('具豐富想像力', this)">具豐富想像力</button>
+                </div>
+            </div>
+
+            <!-- 5. 學生姓名與補充資訊 -->
+            <div class="text-input-row">
+                <div>
+                    <label class="form-label" for="studentName">學生姓名 / 稱呼（可不填）</label>
+                    <input type="text" id="studentName" placeholder="例如：小明、OO同學">
+                </div>
+                <div>
+                    <label class="form-label" for="customDetail">特別事蹟 / 待改善補充（可不填）</label>
+                    <input type="text" id="customDetail" placeholder="例如：擔任數學小幫手、字跡可再端正...">
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button class="btn-generate" onclick="generateComment()">
+                <span class="material-symbols-outlined">auto_awesome</span>
+                生成期末評語草稿
+            </button>
+        </div>
+
+        <!-- Result Output Card -->
+        <div class="result-card">
+            <div class="result-header">
+                <div class="section-header" style="margin:0;">
+                    <span class="material-symbols-outlined">article</span>
+                    評語草稿結果
+                </div>
+                <div class="result-actions">
+                    <button class="btn-action" onclick="copyComment()">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span>
+                        複製評語
+                    </button>
+                </div>
+            </div>
+
+            <div class="result-content" id="resultText">
+                請點擊「生成期末評語草稿」，系統將根據你設定的領域與年級自動撰寫適當的評語！
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Component -->
+    <div class="toast" id="toast">已複製評語內容至剪貼簿！</div>
+
+    <script>
+        let currentGrade = 'mid';
+        let currentDomain = 'all';
+        let currentTone = 'warm';
+        let selectedTraits = ['認真負責', '熱心助人'];
+
+        // 年級選單切換
+        function selectGrade(grade, btn) {
+            currentGrade = grade;
+            document.querySelectorAll('#gradeChips .chip-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // 八大領域切換
+        function selectDomain(domain, btn) {
+            currentDomain = domain;
+            document.querySelectorAll('#domainChips .chip-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // 語氣風格切換
+        function selectTone(tone, btn) {
+            currentTone = tone;
+            document.querySelectorAll('#toneChips .chip-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // 特質標籤複選切換
+        function toggleTrait(trait, btn) {
+            if (selectedTraits.includes(trait)) {
+                selectedTraits = selectedTraits.filter(t => t !== trait);
+                btn.classList.remove('multi-active');
+            } else {
+                selectedTraits.push(trait);
+                btn.classList.add('multi-active');
+            }
+        }
+
+        // 預設評語資料庫（根據領域與年級）
+        const domainTemplates = {
+            all: {
+                title: "綜合日常生活表現",
+                text: "在校學習態度端正，與同儕相處融洽。課堂上能專心聽講，並積極參與團體活動，展現出高度責任感與熱忱。"
+            },
+            chinese: {
+                title: "語文領域 (國語/英語/本土語)",
+                text: "語文理解能力良好，課文朗讀情感豐富。在文字書寫與作業撰寫上態度認真，能順暢表達自身想法，具備良好閱讀理解力。"
+            },
+            math: {
+                title: "數學領域",
+                text: "數理邏輯思維敏捷，對數學幾何與計算題型理解快速。課堂上樂於思考探索，遇解題瓶頸時能耐住性子尋求解答。"
+            },
+            science: {
+                title: "自然科學領域",
+                text: "對自然現象保持濃厚好奇心，分組實驗時操作細心、觀察入微，並能主動發問與紀錄實驗結果，展現科學探索精神。"
+            },
+            social: {
+                title: "社會領域",
+                text: "對社會人文與在地文化具關注心，課堂討論能發表具建設性觀點，具備良好公民素養與環境關懷意識。"
+            },
+            art: {
+                title: "藝術領域 (音樂/美勞/表演)",
+                text: "藝術創作靈感豐富，在美術繪畫與音樂律動表現投入，具備獨特審美感受力與個人風格，展現多元創意體驗。"
+            },
+            pe: {
+                title: "健康與體育領域",
+                text: "體能表現優異，喜愛各類體育活動。遵守運動規則並具備運動家精神，在分組競賽中展現良好團隊合作能力。"
+            },
+            activity: {
+                title: "綜合活動領域",
+                text: "積極參與各項體驗活動與班級自治事項，能將所學靈活運用於生活，展現優良自我管理與人際溝通能力。"
+            },
+            tech: {
+                title: "科技與跨領域/社團",
+                text: "對資訊科技工具操作敏捷，具邏輯運算思考基礎。參與社團活動熱忱投入，展現跨領域學習與問題解決能力。"
+            }
+        };
+
+        // 生成評語核心邏輯
+        function generateComment() {
+            const nameInput = document.getElementById('studentName').value.trim();
+            const detailInput = document.getElementById('customDetail').value.trim();
+            const name = nameInput || "該生";
+            const resultBox = document.getElementById('resultText');
+
+            const domainData = domainTemplates[currentDomain];
+            const traitsText = selectedTraits.length > 0 ? selectedTraits.join('、') : "表現穩定";
+
+            let generatedText = "";
+
+            if (currentTone === 'bullet') {
+                // 條列精準格式 (適合學務系統)
+                generatedText = `【${domainData.title}】 - ${name}期末評語\n`;
+                generatedText += `1. 特質展現：${traitsText}\n`;
+                generatedText += `2. 學習表現：${domainData.text}\n`;
+                if (detailInput) {
+                    generatedText += `3. 特別記事/期望：${detailInput}`;
+                }
+            } else if (currentTone === 'pro') {
+                // 客觀中肯格式
+                generatedText = `${name}於本學期在【${domainData.title}】表現呈現良好脈絡。其特質展現為：${traitsText}。${domainData.text}`;
+                if (detailInput) {
+                    generatedText += ` 備註事項：${detailInput}。`;
+                }
+                generatedText += ` 期盼下學期保持學習熱忱，持續穩定進步。`;
+            } else {
+                // 溫暖鼓勵格式 (預設)
+                generatedText = `${name}在這學期的【${domainData.title}】學習中表現非常亮眼！展現出${traitsText}的好特質。${domainData.text}`;
+                if (detailInput) {
+                    generatedText += ` 另外，${detailInput}，老師感到十分欣慰！`;
+                }
+                generatedText += ` 期望在新學期裡繼續發揮所長，成為更棒的自己！🌟`;
+            }
+
+            // 打字機字元串流動畫
+            resultBox.innerText = "";
+            resultBox.classList.add('typing-cursor');
+            let index = 0;
+
+            const timer = setInterval(() => {
+                resultBox.innerText += generatedText[index];
+                index++;
+                if (index >= generatedText.length) {
+                    clearInterval(timer);
+                    resultBox.classList.remove('typing-cursor');
+                }
+            }, 20);
+        }
+
+        // 一鍵複製
+        function copyComment() {
+            const text = document.getElementById('resultText').innerText;
+            navigator.clipboard.writeText(text);
+
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // 初始自動生成預設草稿
+        generateComment();
+    </script>
+</body>
+</html>
