@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國小期末評語撰寫 AI 系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        },
+                        navy: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-navy-900 text-white border-b border-slate-700 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-500 text-navy-900 p-2 rounded-lg font-bold">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">國小期末評語撰寫 AI 系統</h1>
+                    <p class="text-xs text-slate-400">專為國小教師設計的智慧評語助手</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button id="apiKeyBtn" onclick="openApiModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 px-3 py-1.5 rounded-md flex items-center gap-2 transition">
+                    <i class="fa-solid fa-key text-amber-400"></i>
+                    <span id="apiKeyStatus">設定 Gemini API Key</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Input Form (7 Cols) -->
+        <section class="lg:col-span-7 space-y-6">
+            
+            <!-- Basic Student Info Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 class="text-base font-semibold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-user-gear text-brand-600"></i> 學生 basic 資料
+                </h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">學生座號 / 代號 / 姓名</label>
+                        <input type="text" id="studentName" placeholder="例如：01號 或 王小明" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">就讀年級</label>
+                        <select id="gradeSelect" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+                            <option value="一年級">一年級（低年級）</option>
+                            <option value="二年級">二年級（低年級）</option>
+                            <option value="三年級" selected>三年級（中年級）</option>
+                            <option value="四年級">四年級（中年級）</option>
+                            <option value="五年級">五年級（高年級）</option>
+                            <option value="六年級">六年級（高年級）</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trait Quick Tags Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="flex justify-between items-center mb-3 border-b border-slate-100 pb-2">
+                    <h2 class="text-base font-semibold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-tags text-brand-600"></i> 特質與觀察標籤
+                    </h2>
+                    <span class="text-xs text-slate-400">點擊快速加入/取消</span>
+                </div>
+
+                <!-- Tag Categories -->
+                <div class="space-y-3">
+                    <!-- Category 1 -->
+                    <div>
+                        <span class="text-xs font-semibold text-slate-500 block mb-1.5"><i class="fa-solid fa-book-bookmark text-amber-500 mr-1"></i> 學習與課業</span>
+                        <div class="flex flex-wrap gap-1.5" id="tagsAcademic">
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">上課專心聽講</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">作業按時繳交</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">字跡工整美觀</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">勇於發問思考</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">粗心粗意需複查</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">理解力強學習快</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">課業需要多督促</button>
+                        </div>
+                    </div>
+
+                    <!-- Category 2 -->
+                    <div>
+                        <span class="text-xs font-semibold text-slate-500 block mb-1.5"><i class="fa-solid fa-heart text-rose-500 mr-1"></i> 品德與常規</span>
+                        <div class="flex flex-wrap gap-1.5" id="tagsMoral">
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">守秩序有禮貌</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">熱心服務班級</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">打掃認真負責</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">自律性佳不令人操心</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">偶有愛打鬧狀況</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">誠實善良有愛心</button>
+                        </div>
+                    </div>
+
+                    <!-- Category 3 -->
+                    <div>
+                        <span class="text-xs font-semibold text-slate-500 block mb-1.5"><i class="fa-solid fa-people-group text-sky-500 mr-1"></i> 人際互動與性格</span>
+                        <div class="flex flex-wrap gap-1.5" id="tagsSocial">
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">人緣極佳樂於助人</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">性格文靜內向</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">活潑開朗好動</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">具領導能力</button>
+                            <button onclick="toggleTag(this)" class="tag-btn text-xs border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full text-slate-700 transition">情緒管理需再引導</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Note Area -->
+                <div class="mt-4">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">補充補充描述（自由輸入特徵或事蹟）</label>
+                    <textarea id="customNotes" rows="2" placeholder="如：數學表現特別突出、這次運動會大隊接力表現良好..." class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none"></textarea>
+                </div>
+            </div>
+
+            <!-- Output Settings Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 class="text-base font-semibold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-sliders text-brand-600"></i> 生成設定
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">評語語氣</label>
+                        <select id="toneSelect" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+                            <option value="溫和鼓勵">溫和鼓勵（多正面肯定、語氣溫馨）</option>
+                            <option value="積極引導">積極引導（著重未來的期望與成長）</option>
+                            <option value="客觀嚴謹">客觀嚴謹（條理分明、平實記錄）</option>
+                            <option value="親切熱情">親切熱情（語氣生動活潑）</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">目標字數</label>
+                        <select id="lengthSelect" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+                            <option value="精簡 (約50-80字)">精簡 (約 50-80 字)</option>
+                            <option value="適中 (約100-150字)" selected>適中 (約 100-150 字)</option>
+                            <option value="詳細 (約180-250字)">詳細 (約 180-250 字)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="generateComments()" id="generateBtn" class="mt-5 w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-base">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> 開始生成評語 (多版本)
+                </button>
+            </div>
+
+        </section>
+
+        <!-- Right Column: Output & History (5 Cols) -->
+        <section class="lg:col-span-5 space-y-6">
+            
+            <!-- Result Cards Container -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                    <h2 class="text-base font-semibold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-file-pen text-brand-600"></i> AI 生成結果
+                    </h2>
+                    <span id="resultCount" class="text-xs bg-brand-100 text-brand-800 px-2 py-0.5 rounded font-medium">尚未生成</span>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="hidden py-12 text-center">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-brand-600 mb-3"></i>
+                    <p class="text-sm text-slate-500 font-medium">AI 正在為您撰寫針對性的國小評語...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="py-12 text-center text-slate-400">
+                    <i class="fa-regular fa-comment-dots text-4xl mb-2 opacity-50"></i>
+                    <p class="text-sm">請在左側選取特徵標籤後點擊「開始生成」</p>
+                </div>
+
+                <!-- Generated Results List -->
+                <div id="resultsList" class="space-y-4 hidden">
+                    <!-- Cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="flex justify-between items-center mb-3 border-b border-slate-100 pb-2">
+                    <h2 class="text-base font-semibold text-slate-800 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> 本次已儲存紀錄
+                    </h2>
+                    <button onclick="clearHistory()" class="text-xs text-rose-500 hover:text-rose-700">清除紀錄</button>
+                </div>
+                <div id="historyList" class="space-y-2 max-h-60 overflow-y-auto text-xs text-slate-600">
+                    <p class="text-slate-400 text-center py-4">尚無儲存的紀錄</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Modal: API Key Setting -->
+    <div id="apiModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-key text-amber-500"></i> 設定 Google Gemini API Key
+                </h3>
+                <button onclick="closeApiModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+                輸入個人 Gemini API Key 後可獲得智慧生成品質。若未填寫，系統將自動使用內建的多樣化擬真備用資料庫生成評語。
+            </p>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeApiModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">取消</button>
+                <button onclick="saveApiKey()" class="px-4 py-2 text-xs font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700">儲存設定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-navy-900 text-white px-4 py-2.5 rounded-lg shadow-lg text-xs font-medium translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2 z-50">
+        <i class="fa-solid fa-circle-check text-brand-500" id="toastIcon"></i>
+        <span id="toastMsg">通知訊息</span>
+    </div>
+
+    <script>
+        // Global state
+        let selectedTags = new Set();
+        let historyData = [];
+
+        // Toggle tag selection
+        function toggleTag(btn) {
+            const tagName = btn.innerText.trim();
+            if (selectedTags.has(tagName)) {
+                selectedTags.delete(tagName);
+                btn.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+                btn.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+            } else {
+                selectedTags.add(tagName);
+                btn.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+                btn.classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-200');
+            }
+        }
+
+        // Modal Controls
+        function openApiModal() {
+            document.getElementById('apiModal').classList.remove('hidden');
+            document.getElementById('apiModal').classList.add('flex');
+            document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
+        }
+
+        function closeApiModal() {
+            document.getElementById('apiModal').classList.add('hidden');
+            document.getElementById('apiModal').classList.remove('flex');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                localStorage.setItem('gemini_api_key', key);
+                showToast('API Key 已儲存');
+                updateApiStatus();
+            } else {
+                localStorage.removeItem('gemini_api_key');
+                showToast('已移除 API Key，改用備用生成模組');
+                updateApiStatus();
+            }
+            closeApiModal();
+        }
+
+        function updateApiStatus() {
+            const key = localStorage.getItem('gemini_api_key');
+            const statusElem = document.getElementById('apiKeyStatus');
+            if (key) {
+                statusElem.innerText = 'API Key 已啟用';
+                statusElem.classList.add('text-brand-500');
+            } else {
+                statusElem.innerText = '設定 Gemini API Key';
+                statusElem.classList.remove('text-brand-500');
+            }
+        }
+
+        // Toast message
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Core Generation Logic
+        async function generateComments() {
+            const name = document.getElementById('studentName').value.trim() || '該生';
+            const grade = document.getElementById('gradeSelect').value;
+            const tone = document.getElementById('toneSelect').value;
+            const length = document.getElementById('lengthSelect').value;
+            const customNotes = document.getElementById('customNotes').value.trim();
+            const tagsArr = Array.from(selectedTags);
+
+            if (tagsArr.length === 0 && !customNotes) {
+                showToast('請至少點選一個標籤或填寫補充描述！');
+                return;
+            }
+
+            // UI Loading state
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('resultsList').classList.add('hidden');
+            document.getElementById('loadingSpinner').classList.remove('hidden');
+
+            const apiKey = localStorage.getItem('gemini_api_key');
+
+            if (apiKey) {
+                try {
+                    const results = await fetchGeminiAPI(apiKey, { name, grade, tone, length, tags: tagsArr, customNotes });
+                    renderResults(results, name);
+                } catch (err) {
+                    console.error('API Error:', err);
+                    showToast('API 呼叫失敗，切換至在地化備用生成');
+                    const results = generateFallbackComments(name, grade, tone, tagsArr, customNotes);
+                    renderResults(results, name);
+                }
+            } else {
+                // Fallback local generator with zero repetition
+                setTimeout(() => {
+                    const results = generateFallbackComments(name, grade, tone, tagsArr, customNotes);
+                    renderResults(results, name);
+                }, 600);
+            }
+        }
+
+        // Gemini API Prompt Construction
+        async function fetchGeminiAPI(apiKey, data) {
+            const prompt = `你是一位專業且溫暖的國小教師。請為一位國小「${data.grade}」的學生撰寫學期期末評語。
+學生資訊：
+- 姓名/代號：${data.name}
+- 觀察到的特徵標籤：${data.tags.join(', ')}
+- 補充觀察紀錄：${data.customNotes || '無'}
+- 期望語氣風格：${data.tone}
+- 期望字數：${data.length}
+
+【重要指示】：
+1. 請生成 3 個不同切入角度與句型結構的版本（版本一：側重學習與潛能；版本二：側重品德與常規；版本三：全方位綜合鼓勵）。
+2. 結尾請根據該學生的具體特點與缺點給予「針對性且多樣化」的期許或建議，【嚴禁】三個版本出現相同的結尾套話或罐頭結尾！
+3. 語氣符合國小「${data.grade}」學生的發展階段與國小成績單評語規範。
+4. 請直接輸出 JSON 陣列格式，格式如下：
+[
+  {"version": "版本一 (課業學習導向)", "content": "評語內容..."},
+  {"version": "版本二 (品德生活導向)", "content": "評語內容..."},
+  {"version": "版本三 (溫馨綜合導向)", "content": "評語內容..."}
+]`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseMimeType: "application/json" }
+                })
+            });
+
+            if (!response.ok) throw new Error('API request failed');
+            const resData = await response.json();
+            const jsonText = resData.candidates[0].content.parts[0].text;
+            return JSON.parse(jsonText);
+        }
+
+        // Advanced Dynamic Fallback Generator (No Fixed Ending)
+        function generateFallbackComments(name, grade, tone, tags, customNotes) {
+            const hasTag = (term) => tags.some(t => t.includes(term));
+
+            // Dynamic Tail Generators based on unique student traits
+            const tailPool = [];
+            if (hasTag('粗心')) tailPool.push(`期許未來在答題與複習時多一份耐心與細心檢查，學習必定更加出色。`);
+            if (hasTag('打鬧') || hasTag('情緒')) tailPool.push(`若能持續鍛鍊情緒表達與自律能力，定能成為同儕間更加優秀的榜樣。`);
+            if (hasTag('課業需要多督促')) tailPool.push(`期待下學期能養成主動複習的好習慣，展現屬於自己的無限潛能。`);
+            if (hasTag('專心') || hasTag('理解力強')) tailPool.push(`願你能保持這份對知識的渴望與專注，在未來的學習旅程中持續發光發熱！`);
+            if (hasTag('熱心') || hasTag('人緣')) tailPool.push(`盼你能繼續發揮這份熱情與溫暖，與班上同學共同快樂成長。`);
+            
+            // Universal fallback tails to prevent duplicates
+            const defaultTails = [
+                `期待你在新學期繼續保持優點，踏實邁向每一個學習目標！`,
+                `相信只要保持這份積極態度，未來的發展必定不可限量！`,
+                `願你攜手這份努力與自信，迎接下一個學期豐富的挑戰。`
+            ];
+
+            const getUniqueTail = (idx) => tailPool[idx] || defaultTails[idx % defaultTails.length];
+
+            // Build Version 1
+            let v1 = `${name}在校學習態度端正。`;
+            if (tags.length > 0) v1 += `平時表現出${tags.slice(0, 2).join('、')}的良好特質。`;
+            if (customNotes) v1 += `${customNotes}。`;
+            v1 += ` ${getUniqueTail(0)}`;
+
+            // Build Version 2
+            let v2 = `身為${grade}的學生，${name}在日常生活與品德方面展現了豐富的進步。`;
+            if (tags.length > 2) v2 += `不僅${tags.slice(2, 4).join('，')}，亦深得師長讚許。`;
+            else v2 += `在團體活動中始終默默盡責。`;
+            v2 += ` ${getUniqueTail(1)}`;
+
+            // Build Version 3
+            let v3 = `${name}個性優秀，在本學期的各項表現皆有目共睹。`;
+            if (tags.length > 0) v3 += `無論是${tags[0]}還是整體學習表現，都能看見其付出的心思。`;
+            v3 += ` ${getUniqueTail(2)}`;
+
+            return [
+                { version: "版本一 (課業與發展)", content: v1 },
+                { version: "版本二 (品德與生活)", content: v2 },
+                { version: "版本三 (綜合暖心版)", content: v3 }
+            ];
+        }
+
+        // Render generated cards
+        function renderResults(results, name) {
+            document.getElementById('loadingSpinner').classList.add('hidden');
+            const resultsList = document.getElementById('resultsList');
+            resultsList.classList.remove('hidden');
+            resultsList.innerHTML = '';
+
+            document.getElementById('resultCount').innerText = `已生成 ${results.length} 個版本`;
+
+            results.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3 relative group hover:border-brand-500 transition";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-100">${item.version}</span>
+                        <div class="flex gap-2">
+                            <button onclick="copyText('${escapeQuotes(item.content)}')" class="text-xs text-slate-500 hover:text-brand-600 bg-white border border-slate-200 px-2 py-1 rounded shadow-sm">
+                                <i class="fa-regular fa-copy"></i> 複製
+                            </button>
+                            <button onclick="saveToHistory('${name}', '${escapeQuotes(item.content)}')" class="text-xs text-slate-500 hover:text-amber-600 bg-white border border-slate-200 px-2 py-1 rounded shadow-sm">
+                                <i class="fa-regular fa-bookmark"></i> 儲存
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-700 leading-relaxed font-normal">${item.content}</p>
+                `;
+                resultsList.appendChild(card);
+            });
+        }
+
+        function escapeQuotes(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            showToast('已複製評語至剪貼簿！');
+        }
+
+        function saveToHistory(name, content) {
+            historyData.unshift({ name, content, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+            updateHistoryUI();
+            showToast('已儲存至歷史紀錄');
+        }
+
+        function updateHistoryUI() {
+            const list = document.getElementById('historyList');
+            if (historyData.length === 0) {
+                list.innerHTML = `<p class="text-slate-400 text-center py-4">尚無儲存的紀錄</p>`;
+                return;
+            }
+
+            list.innerHTML = historyData.map((item) => `
+                <div class="p-2.5 bg-slate-50 rounded border border-slate-200 flex justify-between items-start gap-2">
+                    <div class="space-y-1 flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-700">${item.name}</span>
+                            <span class="text-[10px] text-slate-400">${item.time}</span>
+                        </div>
+                        <p class="text-slate-600 line-clamp-2 text-xs">${item.content}</p>
+                    </div>
+                    <button onclick="copyText('${escapeQuotes(item.content)}')" class="text-slate-400 hover:text-brand-600 p-1">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            historyData = [];
+            updateHistoryUI();
+            showToast('已清除歷史紀錄');
+        }
+
+        // Init
+        window.onload = () => {
+            updateApiStatus();
+        };
+    </script>
+</body>
+</html>
